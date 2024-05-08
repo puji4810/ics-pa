@@ -27,8 +27,8 @@
 //   // word_t pre_val;
 // } WP;
 
-// WP wp_pool[NR_WP] = {};
-// WP *head = NULL, *free_ = NULL;
+WP wp_pool[NR_WP] = {};
+WP *head = NULL, *free_ = NULL;
 
 void init_wp_pool()
 {
