@@ -22,7 +22,7 @@
 static int is_batch_mode = false;
 
 void init_regex();
-void init_wp_pool();
+//void init_wp_pool();
 void remove_wp(int no);
 void wp_set(char *e);
 void wp_check();
