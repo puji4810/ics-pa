@@ -12,29 +12,25 @@
 *
 * See the Mulan PSL v2 for more details.
 ***************************************************************************************/
-// #include "sdb.h"
-// #include "watchpoint.h"
-// #define NR_WP 32
-#include "watchpoint.h"
 
-// typedef struct watchpoint
-// {
-//   int NO;
-//   struct watchpoint *next;
+#include "sdb.h"
 
-//   /* TODO: Add more members if necessary */
-//   // char *expr;
-//   // word_t pre_val;
-// } WP;
+#define NR_WP 32
 
-WP wp_pool[NR_WP] = {};
-WP *head = NULL, *free_ = NULL;
+typedef struct watchpoint {
+  int NO;
+  struct watchpoint *next;
 
-void init_wp_pool()
-{
+  /* TODO: Add more members if necessary */
+
+} WP;
+
+static WP wp_pool[NR_WP] = {};
+static WP *head = NULL, *free_ = NULL;
+
+void init_wp_pool() {
   int i;
-  for (i = 0; i < NR_WP; i++)
-  {
+  for (i = 0; i < NR_WP; i ++) {
     wp_pool[i].NO = i;
     wp_pool[i].next = (i == NR_WP - 1 ? NULL : &wp_pool[i + 1]);
   }
@@ -45,40 +41,3 @@ void init_wp_pool()
 
 /* TODO: Implement the functionality of watchpoint */
 
-WP *new_wp()
-{
-  if(free_ == NULL){
-    printf("no more point to use\n");
-    assert(0);
-  }
-  else{
-    WP *p = free_;
-    free_ = free_->next;
-    p->next = head;
-    head = p;
-    return p;
-  }
-}
-
-void free_wp(WP *wp)
-{
-  if(wp == head){
-    WP* p = head;
-    p->next = free_;
-    free_ = p;
-    head= head->next;
-  }
-  else{
-    WP* p = head;
-    while(p->next != wp){
-      p = p->next;
-    }
-    if(p->next == NULL){
-      printf("no such watchpoint");
-      assert(0);
-    }
-    p->next = wp->next;
-    wp->next = free_;
-    free_ = wp;
-  }
-}

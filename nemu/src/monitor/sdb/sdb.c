@@ -12,26 +12,20 @@
 *
 * See the Mulan PSL v2 for more details.
 ***************************************************************************************/
-#include <memory/paddr.h>
+
 #include <isa.h>
 #include <cpu/cpu.h>
 #include <readline/readline.h>
 #include <readline/history.h>
 #include "sdb.h"
-#include "./watchpoint.h"
+
 static int is_batch_mode = false;
 
 void init_regex();
-//void init_wp_pool();
-void remove_wp(int no);
-void wp_set(char *e);
-void wp_check();
-void free_wp(WP *wp);
-void sdb_watchpoint_display();
+void init_wp_pool();
 
 /* We use the `readline' library to provide more flexibility to read from stdin. */
-static char *rl_gets()
-{
+static char* rl_gets() {
   static char *line_read = NULL;
 
   if (line_read) {
@@ -55,34 +49,21 @@ static int cmd_c(char *args) {
 
 
 static int cmd_q(char *args) {
-  nemu_state.state=NEMU_QUIT; 
   return -1;
 }
 
 static int cmd_help(char *args);
-static int cmd_si(char *args);
-static int cmd_info(char *args);
-static int cmd_x(char *args);
-static int cmd_p(char *args);
-static int cmd_w(char *args);
-static int cmd_d(char *args);
 
-static struct
-{
+static struct {
   const char *name;
   const char *description;
   int (*handler) (char *);
-} cmd_table[] = {
-    {"help", "Display information about all supported commands", cmd_help},
-    {"c", "Continue the execution of the program", cmd_c},
-    {"q", "Exit NEMU", cmd_q},
-    {"si", "Step the program", cmd_si},
-    {"info", "Generic command for showing things about the program being debugged.", cmd_info},
-    {"x", "scan the memory", cmd_x},
-    {"p", "Find the value of the expression EXPR",cmd_p},
-    {"w", "Watchpoint", cmd_w},
-    {"d", "Delete the watchpoint", cmd_d},
-    /* TODO: Add more commands */
+} cmd_table [] = {
+  { "help", "Display information about all supported commands", cmd_help },
+  { "c", "Continue the execution of the program", cmd_c },
+  { "q", "Exit NEMU", cmd_q },
+
+  /* TODO: Add more commands */
 
 };
 
@@ -110,20 +91,6 @@ static int cmd_help(char *args) {
   }
   return 0;
 }
-
-static int cmd_si(char *args){
-  char *arg = strtok(NULL, " ");
-  if(arg == NULL){
-    cpu_exec(1);
-  }
-  else{
-    int n = atoi(arg);
-    cpu_exec(n);
-  }
-  return 0;
-}
-
-
 
 void sdb_set_batch_mode() {
   is_batch_mode = true;
@@ -173,107 +140,4 @@ void init_sdb() {
 
   /* Initialize the watchpoint pool. */
   init_wp_pool();
-}
-
-static int cmd_info(char *args)
-{
-  char *arg = strtok(NULL, " ");
-  if(arg == NULL){
-    printf("info r\n");
-    printf("info w\n");
-    return 0;
-  }
-  else if(*arg=='r'){
-    isa_reg_display();
-  }
-  //else if (*arg=='w')
-    //sdb_watchpoint_display();
-  return 0;
-}
-
-static int cmd_x(char *args){
-  if(args==NULL){
-    printf("No args\n");
-    return 0;
-  }
-  char *n = strtok(args, " ");
-  char *baseaddr = strtok(NULL, " ");
-  int len = 0;
-  paddr_t addr = 0;
-  sscanf(n, "%d", &len);
-  sscanf(baseaddr, "%x", &addr);
-  for (int i = 0; i < len; i++)
-  {
-    printf("%x\n", paddr_read(addr, 4)); 
-    addr = addr + 4;
-  }
-  return 0;
-}
-
-static int cmd_p(char *args){
-  if (args == NULL)
-  {
-    printf("No args\n");
-    return 0;
-  }
-  //  printf("args = %s\n", args);
-  bool flag = false;
-  expr(args, &flag);
-  return 0;
-}
-
-static int cmd_d(char *args)
-{
-  if (args == NULL)
-    printf("No args.\n");
-  else
-  {
-    remove_wp(atoi(args));
-  }
-  return 0;
-}
-
-static int cmd_w(char *args)
-{
-  wp_set(args);
-  return 0;
-}
-
-void wp_set(char *e)
-{
-  WP *p = new_wp();
-  strcpy(p->expr, e);
-  // bool flag = false;
-  // int res = expr(e,&flag);
-  printf("set watchpoint %d : %s\n", p->NO, p->expr);
-}
-
-void remove_wp(int no)
-{
-  if (no < 0 || no > NR_WP - 1)
-  {
-    printf("no such watchpoint\n");
-    assert(0);
-  }
-  else
-  {
-    WP *p = &wp_pool[no];
-    free_wp(p);
-    printf("remove watchpoint %d : %s\n", p->NO, p->expr);
-  }
-}
-
-void sdb_watchpoint_display()
-{
-  if (head == NULL)
-  {
-    printf("no watchpoint\n");
-    return;
-  }
-  WP *p = head;
-  while (p->next != NULL)
-  {
-    printf("watchpoint %d : %s\n", p->NO, p->expr);
-    p = p->next;
-  }
 }
