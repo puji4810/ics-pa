@@ -1,4 +1,4 @@
-STUID = 11111
+STUID = 23030112
 STUNAME = puji
 
 # DO NOT modify the following code!!!

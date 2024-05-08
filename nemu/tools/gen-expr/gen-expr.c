@@ -30,9 +30,76 @@ static char *code_format =
 "  printf(\"%%u\", result); "
 "  return 0; "
 "}";
-
-static void gen_rand_expr() {
-  buf[0] = '\0';
+int choose(int n){
+  return (rand()%n);
+}
+static void gen_num()
+{
+  int num = choose(9);
+  if(buf[strlen(buf)-1]=='/'&& num==0){
+    num++;
+  }
+  char num_str[2];
+  sprintf(num_str, "%d", num);
+  if (strlen(buf) + strlen(num_str) < sizeof(buf))
+  {
+    strcat(buf, num_str);
+  }
+  else
+  {
+    return;
+  }
+}
+static void gen(char c)
+{
+  char str[2]={c, '\0'};
+  if(strlen(buf)+sizeof(c)<sizeof(buf))
+    strcat(buf, str);
+  else
+  {
+    return;
+    }
+}
+static void gen_rand_op()
+{
+  char op[4] = {'+', '-', '*', '/'};
+  int op_index = rand() % 4;
+  char op_str[2] = {op[op_index], '\0'}; 
+  if (strlen(buf) + strlen(op_str) < sizeof(buf))
+  {
+    strcat(buf, op_str); 
+  }
+  else
+  {
+    return;
+  }
+}
+static inline void gen_rand_expr()
+{
+  //  buf[0] = '\0';
+  // 这里不删掉会报错，因为循环
+  int i = choose(3);
+  if (strlen(buf) > 30)
+  {
+    return;
+  }
+  // 防止表达式太长
+  switch (i)
+  {
+  case 0:
+    gen_num();
+    break;
+  case 1:
+    gen('(');
+    gen_rand_expr();
+    gen(')');
+    break;
+  default:
+    gen_rand_expr();
+    gen_rand_op();
+    gen_rand_expr();
+    break;
+  }
 }
 
 int main(int argc, char *argv[]) {
@@ -66,4 +133,5 @@ int main(int argc, char *argv[]) {
     printf("%u %s\n", result, buf);
   }
   return 0;
+  //memset(buf, ' ', sizeof(buf));
 }
