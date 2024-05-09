@@ -235,6 +235,8 @@ static int cmd_d(char *args)
 
 static int cmd_w(char *args)
 {
+  if(args==NULL)
+    printf("No args.\n");
   printf("1111");
   wp_set(args);
   return 0;
