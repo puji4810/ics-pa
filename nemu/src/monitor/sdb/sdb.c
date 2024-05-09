@@ -242,15 +242,15 @@ static int cmd_w(char *args)
   }
   else
   {
-    wp_set(args);
+    wp_set("$t0");
     return 0;
   }
 }
 
-void wp_set(char *e)
+void wp_set(char *args)
 {
   WP *p = new_wp();
-  strcpy(p->expr, e);
+  strcpy(p->expr, args);
   printf("set watchpoint %d : %s\n", p->NO, p->expr);
 }
 
