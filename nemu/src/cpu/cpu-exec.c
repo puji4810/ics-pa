@@ -38,19 +38,19 @@ static void trace_and_difftest(Decode *_this, vaddr_t dnpc) {
 #endif
   if (g_print_step) { IFDEF(CONFIG_ITRACE, puts(_this->logbuf)); }
   IFDEF(CONFIG_DIFFTEST, difftest_step(_this->pc, dnpc));
-  WP* p=head;
-  while(p->next != NULL){
-    bool flag = false;
-    word_t new=expr(p->expr, &flag);
-    if (p->pre_val != new)
-    {
-      printf("watchpoint %d  old %s\n", p->NO, p->expr);
-      printf("old value:%d new value:%d", p->pre_val, new);
-      p->pre_val = new;
-      nemu_state.state = NEMU_STOP;
-    }
-    p = p->next;
-  }
+  // WP* p=head;
+  // while(p->next != NULL){
+  //   bool flag = false;
+  //   word_t new=expr(p->expr, &flag);
+  //   if (p->pre_val != new)
+  //   {
+  //     printf("watchpoint %d  old %s\n", p->NO, p->expr);
+  //     printf("old value:%d new value:%d", p->pre_val, new);
+  //     p->pre_val = new;
+  //     nemu_state.state = NEMU_STOP;
+  //   }
+  //   p = p->next;
+  // }
 }
 
 static void exec_once(Decode *s, vaddr_t pc) {
