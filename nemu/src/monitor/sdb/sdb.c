@@ -242,7 +242,7 @@ static int cmd_w(char *args)
   }
   else
   {
-    wp_set("$t0");
+    wp_set(args);
     return 0;
   }
 }
