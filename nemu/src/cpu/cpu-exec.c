@@ -34,8 +34,9 @@ void device_update();
 void wp_check(){
   WP* p=head;
   while(p != NULL){
-    bool flag = false;
-    word_t new=expr(p->expr, &flag);
+    bool flag =false;
+    char *e = p->expr;
+    word_t new=expr(e, &flag);
     if (p->old_val != new)
     {
       printf("watchpoint %d  old %s\n", p->NO, p->expr);
