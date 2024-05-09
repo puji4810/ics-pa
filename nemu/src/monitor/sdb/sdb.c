@@ -255,9 +255,7 @@ void remove_wp(int no)
   }
   else
   {
-    printf("111");
     WP *p = &wp_pool[no];
-    printf("111");
     free_wp(p);
     printf("remove watchpoint %d : %s\n", p->NO, p->expr);
   }
