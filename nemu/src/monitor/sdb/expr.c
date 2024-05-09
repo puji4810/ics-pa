@@ -493,9 +493,10 @@ word_t expr(char *e, bool *success) {
   *success = true;
   int res;
   res=eval(0,nr_token-1);
-  if (!division_zero)
-    printf("uint32_t res = %d\n", res);
-  else
+  // if (!division_zero)
+  //   printf("uint32_t res = %d\n", res);
+  // else
+  if (division_zero)
     printf("Your input have an error: can't division zeor\n");
   memset(tokens, 0, sizeof(tokens));
   return res;
