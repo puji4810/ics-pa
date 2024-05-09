@@ -38,8 +38,8 @@ void wp_check(){
     word_t new=expr(p->expr, &flag);
     if (p->old_val != new)
     {
-      printf("watchpoint %d : %s\n", p->NO, p->expr);
-      printf("old value:%d    new value:%d\n", p->old_val, new);
+      printf("watchpoint %d  old %s\n", p->NO, p->expr);
+      printf("old value:%d new value:%d\n", p->old_val, new);
       p->old_val = new;
       nemu_state.state = NEMU_STOP;
     }
