@@ -33,7 +33,7 @@ static bool g_print_step = false;
 void device_update();
 void wp_check(){
   WP* p=head;
-  while(p->next != NULL){
+  while(p != NULL){
     bool flag = false;
     word_t new=expr(p->expr, &flag);
     if (p->old_val != new)
