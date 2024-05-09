@@ -251,7 +251,7 @@ static int cmd_w(char *args)
 void wp_set(char *args)
 {
   WP *p = new_wp();
-  strcpy(p->expr, args);
+  p->expr = args;
   printf("set watchpoint %d : %s\n", p->NO, p->expr);
 }
 
