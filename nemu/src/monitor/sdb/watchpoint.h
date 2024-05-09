@@ -11,7 +11,7 @@ typedef struct watchpoint
 
 	/* TODO: Add more members if necessary */
 	char *expr;
-	word_t pre_val;
+	word_t old_val;
 } WP;
 
 extern WP wp_pool[NR_WP];
