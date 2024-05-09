@@ -186,8 +186,8 @@ static int cmd_info(char *args)
   else if(*arg=='r'){
     isa_reg_display();
   }
-  //else if (*arg=='w')
-    //sdb_watchpoint_display();
+  else if (*arg=='w')
+    sdb_watchpoint_display();
   return 0;
 }
 
