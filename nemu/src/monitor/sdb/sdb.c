@@ -243,8 +243,6 @@ void wp_set(char *e)
 {
   WP *p = new_wp();
   strcpy(p->expr, e);
-  // bool flag = false;
-  // int res = expr(e,&flag);
   printf("set watchpoint %d : %s\n", p->NO, p->expr);
 }
 
@@ -271,9 +269,9 @@ void sdb_watchpoint_display()
     return;
   }
   WP *p = head;
-  while (p->next != NULL)
+  while (p != NULL)
   {
-    printf("watchpoint %d : %s\n", p->NO, p->expr);
+    printf("watchpoint %d : %s \n", p->NO, p->expr);
     p = p->next;
   }
 }
