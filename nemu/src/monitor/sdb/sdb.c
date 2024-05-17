@@ -267,8 +267,8 @@ void remove_wp(int no)
     WP *p = &wp_pool[no];
     free_wp(p);
     printf("remove watchpoint %d : %s\n", p->NO, p->expr);
-    // free(p->expr);
-    // p->expr = NULL;
+    free(p->expr);
+    p->expr = NULL;
   }
 }
 
