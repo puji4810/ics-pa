@@ -253,6 +253,8 @@ void wp_set(char *args)
   WP *p = new_wp();
   p->expr = strdup(args);
   printf("set watchpoint %d : %s\n", p->NO, p->expr);
+  free(p);
+  p = NULL;
 }
 
 void remove_wp(int no)
