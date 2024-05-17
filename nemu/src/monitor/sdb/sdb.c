@@ -280,7 +280,7 @@ void sdb_watchpoint_display()
     return;
   }
   WP *p = head;
-  while (p != NULL)
+  while (p ->next != NULL)
   {
     printf("watchpoint %d : %s \n", p->NO, p->expr);
     p = p->next;
