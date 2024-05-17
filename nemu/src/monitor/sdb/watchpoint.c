@@ -52,11 +52,10 @@ WP *new_wp()
     assert(0);
   }
   else{
-    WP *p = free_;
-    free_ = free_->next;
+    WP* p = free_;
     p->next = head;
     head = p;
-    head->next = NULL;
+    free_ = free_->next;
     return head;
   }
 }
