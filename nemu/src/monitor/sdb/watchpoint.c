@@ -70,7 +70,7 @@ void free_wp(WP *wp)
   }
   else{
     WP* p = head;
-    while(p && p != wp){
+    while(p->next  && p != wp){
       p = p->next;
     }
     if(p == NULL){
