@@ -268,6 +268,7 @@ void remove_wp(int no)
     free_wp(p);
     printf("remove watchpoint %d : %s\n", p->NO, p->expr);
     free(p->expr);
+    p->expr = NULL;
   }
 }
 
