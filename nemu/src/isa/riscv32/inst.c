@@ -124,7 +124,7 @@ static int decode_exec(Decode *s)
   INSTPAT("0000000 ????? ????? 101 ????? 00100 11", srli, I, R(rd) = src1 >> imm);
   INSTPAT("0000000 ????? ????? 001 ????? 00100 11", elli, I, R(rd) = src1 << imm);
   INSTPAT("??????? ????? ????? 000 ????? 11001 11", ret, I, R(rd) = s->pc + 4; s->dnpc = (src1 + imm) & ~1); // jalr(ret)指令
-
+  INSTPAT("0000000 00001 00000 000 00000 11100 11", ebreak, N, NEMUTRAP(s->pc, R(10)));                      // R(10) is $a0
   INSTPAT_END();
 
   R(0) = 0; // reset $zero to 0
