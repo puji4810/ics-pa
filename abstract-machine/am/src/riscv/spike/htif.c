@@ -87,7 +87,7 @@ void htif_syscall(uintptr_t arg)
 
 void htif_console_putchar(uint8_t ch)
 {
-//#if __riscv_xlen == 32
+#if __riscv_xlen == 32
   // HTIF devices are not supported on RV32, so proxy a write system call
   volatile uint64_t magic_mem[8];
   magic_mem[0] = SYS_write;
@@ -95,11 +95,11 @@ void htif_console_putchar(uint8_t ch)
   magic_mem[2] = (uintptr_t)&ch;
   magic_mem[3] = 1;
   do_tohost_fromhost(0, 0, (uintptr_t)magic_mem);
-// #else
-//   spinlock_lock(&htif_lock);
-//     __set_tohost(1, 1, ch);
-//   spinlock_unlock(&htif_lock);
-//#endif
+#else
+  spinlock_lock(&htif_lock);
+    __set_tohost(1, 1, ch);
+  spinlock_unlock(&htif_lock);
+#endif
 }
 
 void htif_poweroff()
