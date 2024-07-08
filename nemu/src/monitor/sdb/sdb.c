@@ -111,19 +111,18 @@ static int cmd_help(char *args) {
   return 0;
 }
 
-static int cmd_si(char *args){
-  char *arg = strtok(NULL, " ");
-  if(arg == NULL){
-    cpu_exec(1);
+static int cmd_si(char *args)
+{
+  int n;
+  if (args == NULL)
+  {
+    n = 1;
   }
-  else{
-    int n = atoi(arg);
-    cpu_exec(n);
-  }
+  else
+    sscanf(args, "%d", &n);
+  cpu_exec(n);
   return 0;
 }
-
-
 
 void sdb_set_batch_mode() {
   is_batch_mode = true;
