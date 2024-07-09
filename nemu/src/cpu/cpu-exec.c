@@ -17,7 +17,7 @@
 #include <cpu/decode.h>
 #include <cpu/difftest.h>
 #include <locale.h>
-
+#include "../monitor/sdb/watchpoint.h"
 /* The assembly code of instructions executed is only output to the screen
  * when the number of instructions executed is less than this value.
  * This is useful when you use the `si' command.
@@ -26,26 +26,26 @@
 #define MAX_INST_TO_PRINT 10
 
 CPU_state cpu = {};
-CPU_csr csr = {
-  mstatus: MUXDEF(CONFIG_DIFFTEST, 0x1800, 0),
-  mtvec: 0,
-  mepc: 0,
-  mcause: 0,
-  satp: 0,
-  mscratch: 0,
-};
 uint64_t g_nr_guest_inst = 0;
 static uint64_t g_timer = 0; // unit: us
 static bool g_print_step = false;
 
 void device_update();
-
-bool check_wps();
-
-void update_iringbufs(char *str);
-void iring_display();
-
-void ftrace(Decode *s);
+void wp_check(){
+  WP* p=head;
+  while(p != NULL){
+    bool flag = false;
+    word_t new=expr(p->expr, &flag);
+    if (p->old_val != new)
+    {
+      printf("watchpoint %d  : %s\n", p->NO, p->expr);
+      printf("old value:%d\nnew value:%d\n", p->old_val, new);
+      p->old_val = new;
+      nemu_state.state = NEMU_STOP;
+    }
+    p = p->next;
+  }
+}
 
 static void trace_and_difftest(Decode *_this, vaddr_t dnpc) {
 #ifdef CONFIG_ITRACE_COND
@@ -53,9 +53,7 @@ static void trace_and_difftest(Decode *_this, vaddr_t dnpc) {
 #endif
   if (g_print_step) { IFDEF(CONFIG_ITRACE, puts(_this->logbuf)); }
   IFDEF(CONFIG_DIFFTEST, difftest_step(_this->pc, dnpc));
-  IFDEF(CONFIG_WATCHPOINT, if(check_wps() && (nemu_state.state == NEMU_RUNNING)){ nemu_state.state = NEMU_STOP; });
-
-  IFDEF(CONFIG_FTRACE, ftrace(_this));
+  wp_check();
 }
 
 static void exec_once(Decode *s, vaddr_t pc) {
@@ -63,12 +61,6 @@ static void exec_once(Decode *s, vaddr_t pc) {
   s->snpc = pc;
   isa_exec_once(s);
   cpu.pc = s->dnpc;
-
-  word_t intr = isa_query_intr();
-  if (intr != INTR_EMPTY) {
-    cpu.pc = isa_raise_intr(intr, cpu.pc);
-  }
-
 #ifdef CONFIG_ITRACE
   char *p = s->logbuf;
   p += snprintf(p, sizeof(s->logbuf), FMT_WORD ":", s->pc);
@@ -92,7 +84,6 @@ static void exec_once(Decode *s, vaddr_t pc) {
 #else
   p[0] = '\0'; // the upstream llvm does not support loongarch32r
 #endif
-  update_iringbufs(s->logbuf);
 #endif
 }
 
@@ -118,9 +109,6 @@ static void statistic() {
 
 void assert_fail_msg() {
   isa_reg_display();
-#ifdef CONFIG_ITRACE
-  iring_display();
-#endif
   statistic();
 }
 
@@ -147,7 +135,7 @@ void cpu_exec(uint64_t n) {
     case NEMU_END: case NEMU_ABORT:
       Log("nemu: %s at pc = " FMT_WORD,
           (nemu_state.state == NEMU_ABORT ? ANSI_FMT("ABORT", ANSI_FG_RED) :
-           (nemu_state.halt_ret == 0 ? ANSI_FMT("HIT GOOD TRAP", ANSI_FG_GREEN) :
+          (nemu_state.halt_ret == 0 ? ANSI_FMT("HIT GOOD TRAP", ANSI_FG_GREEN) :
             ANSI_FMT("HIT BAD TRAP", ANSI_FG_RED))),
           nemu_state.halt_pc);
       // fall through

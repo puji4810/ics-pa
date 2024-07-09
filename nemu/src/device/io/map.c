@@ -52,28 +52,18 @@ void init_map() {
   p_space = io_space;
 }
 
-static inline void dtrace(char *type, paddr_t addr, int len, word_t data, IOMap *map) {
-#ifdef CONFIG_DTRACE
-  if(addr - CONFIG_DTRACE_START_ADDRESS <= CONFIG_DTRACE_RANGE){
-      Log("[%s] device = %s, address = "FMT_PADDR", len = %d, data = "FMT_WORD, type, map->name, addr, len, data);
-  }
-#endif
-}
-
 word_t map_read(paddr_t addr, int len, IOMap *map) {
   assert(len >= 1 && len <= 8);
   check_bound(map, addr);
   paddr_t offset = addr - map->low;
   invoke_callback(map->callback, offset, len, false); // prepare data to read
   word_t ret = host_read(map->space + offset, len);
-  dtrace("R", addr, len, ret, map);
   return ret;
 }
 
 void map_write(paddr_t addr, int len, word_t data, IOMap *map) {
   assert(len >= 1 && len <= 8);
   check_bound(map, addr);
-  dtrace("W", addr, len, data, map);
   paddr_t offset = addr - map->low;
   host_write(map->space + offset, len, data);
   invoke_callback(map->callback, offset, len, true);

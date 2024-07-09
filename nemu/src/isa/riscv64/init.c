@@ -13,25 +13,31 @@
 * See the Mulan PSL v2 for more details.
 ***************************************************************************************/
 
-#ifndef __MEMORY_PADDR_H__
-#define __MEMORY_PADDR_H__
+#include <isa.h>
+#include <memory/paddr.h>
 
-#include <common.h>
+// this is not consistent with uint8_t
+// but it is ok since we do not access the array directly
+static const uint32_t img [] = {
+  0x00000297,  // auipc t0,0
+  0x0002b823,  // sd  zero,16(t0)
+  0x0102b503,  // ld  a0,16(t0)
+  0x00100073,  // ebreak (used as nemu_trap)
+  0xdeadbeef,  // some data
+};
 
-#define PMEM_LEFT  ((paddr_t)CONFIG_MBASE)
-#define PMEM_RIGHT ((paddr_t)CONFIG_MBASE + CONFIG_MSIZE - 1)
-#define RESET_VECTOR (PMEM_LEFT + CONFIG_PC_RESET_OFFSET)
+static void restart() {
+  /* Set the initial program counter. */
+  cpu.pc = RESET_VECTOR;
 
-/* convert the guest physical address in the guest program to host virtual address in NEMU */
-uint8_t* guest_to_host(paddr_t paddr);
-/* convert the host virtual address in NEMU to guest physical address in the guest program */
-paddr_t host_to_guest(uint8_t *haddr);
-
-static inline bool in_pmem(paddr_t addr) {
-  return addr - CONFIG_MBASE < CONFIG_MSIZE;
+  /* The zero register is always 0. */
+  cpu.gpr[0] = 0;
 }
 
-word_t paddr_read(paddr_t addr, int len);
-void paddr_write(paddr_t addr, int len, word_t data);
+void init_isa() {
+  /* Load built-in image. */
+  memcpy(guest_to_host(RESET_VECTOR), img, sizeof(img));
 
-#endif
+  /* Initialize this virtual computer system. */
+  restart();
+}

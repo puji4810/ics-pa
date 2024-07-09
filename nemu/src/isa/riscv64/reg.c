@@ -13,25 +13,19 @@
 * See the Mulan PSL v2 for more details.
 ***************************************************************************************/
 
-#ifndef __MEMORY_PADDR_H__
-#define __MEMORY_PADDR_H__
+#include <isa.h>
+#include "local-include/reg.h"
 
-#include <common.h>
+const char *regs[] = {
+  "$0", "ra", "sp", "gp", "tp", "t0", "t1", "t2",
+  "s0", "s1", "a0", "a1", "a2", "a3", "a4", "a5",
+  "a6", "a7", "s2", "s3", "s4", "s5", "s6", "s7",
+  "s8", "s9", "s10", "s11", "t3", "t4", "t5", "t6"
+};
 
-#define PMEM_LEFT  ((paddr_t)CONFIG_MBASE)
-#define PMEM_RIGHT ((paddr_t)CONFIG_MBASE + CONFIG_MSIZE - 1)
-#define RESET_VECTOR (PMEM_LEFT + CONFIG_PC_RESET_OFFSET)
-
-/* convert the guest physical address in the guest program to host virtual address in NEMU */
-uint8_t* guest_to_host(paddr_t paddr);
-/* convert the host virtual address in NEMU to guest physical address in the guest program */
-paddr_t host_to_guest(uint8_t *haddr);
-
-static inline bool in_pmem(paddr_t addr) {
-  return addr - CONFIG_MBASE < CONFIG_MSIZE;
+void isa_reg_display() {
 }
 
-word_t paddr_read(paddr_t addr, int len);
-void paddr_write(paddr_t addr, int len, word_t data);
-
-#endif
+word_t isa_reg_str2val(const char *s, bool *success) {
+  return 0;
+}
