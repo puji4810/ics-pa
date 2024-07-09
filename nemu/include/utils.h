@@ -74,4 +74,9 @@ uint64_t get_time();
   } while (0)
 
 
+// ----------- elf -----------
+void add_elf(char *elf_file);
+void load_elf();
+char *load_func_from_elf(paddr_t address, bool is_exact);
+
 #endif

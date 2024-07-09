@@ -12,26 +12,30 @@
 *
 * See the Mulan PSL v2 for more details.
 ***************************************************************************************/
-#include <memory/paddr.h>
+
 #include <isa.h>
 #include <cpu/cpu.h>
 #include <readline/readline.h>
 #include <readline/history.h>
 #include "sdb.h"
-#include "./watchpoint.h"
-static int is_batch_mode = false;
 
-void init_regex();
-//void init_wp_pool();
-void remove_wp(int no);
-void wp_set(char *e);
-void wp_check();
-void free_wp(WP *wp);
-void sdb_watchpoint_display();
+#include <memory/paddr.h>
+#include <cpu/difftest.h>
+
+static int is_batch_mode = false;
+extern bool is_test_gen_expr_mode;
+
+extern void init_expr();
+void init_wp_pool();
+bool new_wp(char *expression);
+void free_wp(int no);
+void printf_wps();
+void check_expr();
+
+word_t expr(char *e, bool *success);
 
 /* We use the `readline' library to provide more flexibility to read from stdin. */
-static char *rl_gets()
-{
+static char* rl_gets() {
   static char *line_read = NULL;
 
   if (line_read) {
@@ -53,36 +57,195 @@ static int cmd_c(char *args) {
   return 0;
 }
 
+static int cmd_si(char *args) {
+  uint64_t n = 1;
+  if (args)
+  {
+    int match = sscanf(args, "%ld", &n);
+    if(!match){
+      printf("Unknown args '%s'.Usage: si [N]\n", args);
+      return 0;
+    }
+  }
+  cpu_exec(n);
+  return 0;
+}
+
+static int cmd_info(char *args) {
+  char usage_msg[] = "Usage: info SUBCMD(such as 'info r' or 'info w')";
+  char info_args[10] = "";
+  if (!args) {
+    printf("%s\n", usage_msg);
+    return 0;
+  }
+  sscanf(args, "%s", info_args);
+  if (strcmp(info_args, "r") == 0) {
+    isa_reg_display();
+  }else if(strcmp(info_args, "w") == 0){
+    printf_wps();
+  }else{
+    printf("Unknown args '%s'.%s\n", args, usage_msg);
+  }
+  return 0;
+}
+
+static int cmd_x(char *args) {
+  char usage_msg[] = "Usage: x N EXPR(such as 'x 10 $esp')";
+  int n = 0;
+  paddr_t addr = 0;
+  if (!args) {
+    printf("%s\n", usage_msg);
+    return 0;
+  }
+  int match = sscanf(args, "%d %" MUXDEF(CONFIG_ISA64, PRIx64, PRIx32), &n, &addr);
+  if(match != 2){
+    printf("Unknown args '%s'.%s\n", args, usage_msg);
+    return 0;
+  }
+  printf_memory_by_paddr_len(addr, n);
+  return 0;
+}
+
+static int cmd_p(char *args) {
+  char usage_msg[] = "Usage: p EXPR(such as 'p $eax + 1')";
+  if (!args) {
+    printf("%s\n", usage_msg);
+    return 0;
+  }
+  // printf("%s\n", args);
+  bool success = true;
+  uint32_t result = expr(args, &success);
+  if(success){
+    printf("%d (0x%x)\n", result, result);
+  }
+  return 0;
+}
+
+static int cmd_w(char *args) {
+  IFNDEF(CONFIG_WATCHPOINT, printf("Please enable watchpoint in menuconfig\n");return 0);
+  char usage_msg[] = "Usage: w EXPR(such as 'w *0x2000')";
+  if (!args) {
+    printf("%s\n", usage_msg);
+    return 0;
+  }
+  new_wp(args);
+  return 0;
+}
+
+static int cmd_d(char *args) {
+  char usage_msg[] = "Usage: d [N](such as 'd 2')";
+  if (args)
+  {
+    int wp_index = 0;
+    int match = sscanf(args, "%d", &wp_index);
+    if(!match){
+      printf("Unknown args '%s'.%s\n", args, usage_msg);
+      return 0;
+    }
+    free_wp(wp_index);
+  } else {
+    init_wp_pool();
+  }
+  return 0;
+}
+
+#ifdef CONFIG_DIFFTEST
+static int cmd_detach(char *args) {
+  difftest_detach();
+  return 0;
+}
+
+static int cmd_attach(char *args) {
+  difftest_attach();
+  return 0;
+}
+#endif
+
+static int cmd_save(char *args) {
+  char usage_msg[] = "Usage: save [path]";
+  #define MAX_LEN 2048
+  char path_arg[MAX_LEN] = "";
+  if (!args) {
+    printf("%s\n", usage_msg);
+    return 0;
+  }
+  sscanf(args, "%s", path_arg);
+
+  FILE *fp = fopen(path_arg, "wb");
+  assert(fp);
+  size_t cpu_size = sizeof(CPU_state);
+  int write_size = fwrite(&cpu, 1, cpu_size, fp);
+  assert(write_size == cpu_size);
+  size_t csr_size = sizeof(CPU_csr);
+  write_size = fwrite(&csr, 1, csr_size, fp);
+  assert(write_size == csr_size);
+
+  write_size = fwrite(guest_to_host(RESET_VECTOR), 1, CONFIG_MSIZE, fp);
+  assert(write_size == CONFIG_MSIZE);
+  
+  fclose(fp);
+  return 0;
+}
+
+static int cmd_load(char *args) {
+  char usage_msg[] = "Usage: load [path]";
+  #define MAX_LEN 2048
+  char path_arg[MAX_LEN] = "";
+  if (!args) {
+    printf("%s\n", usage_msg);
+    return 0;
+  }
+  sscanf(args, "%s", path_arg);
+
+  FILE *fp = fopen(path_arg, "rb");
+  assert(fp);
+  size_t cpu_size = sizeof(CPU_state);
+  int read_size = fread(&cpu, 1, cpu_size, fp);
+  assert(read_size == cpu_size);
+  size_t csr_size = sizeof(CPU_csr);
+  read_size = fread(&csr, 1, csr_size, fp);
+  assert(read_size == csr_size);
+
+  read_size = fread(guest_to_host(RESET_VECTOR), 1, CONFIG_MSIZE, fp);
+  assert(read_size == CONFIG_MSIZE);
+  
+  fclose(fp);
+
+#ifdef CONFIG_DIFFTEST
+  cmd_attach(NULL);
+#endif
+  return 0;
+}
 
 static int cmd_q(char *args) {
-  nemu_state.state=NEMU_QUIT; 
+  nemu_state.state = NEMU_QUIT;
   return -1;
 }
 
 static int cmd_help(char *args);
-static int cmd_si(char *args);
-static int cmd_info(char *args);
-static int cmd_x(char *args);
-static int cmd_p(char *args);
-static int cmd_w(char *args);
-static int cmd_d(char *args);
 
-static struct
-{
+static struct {
   const char *name;
   const char *description;
   int (*handler) (char *);
-} cmd_table[] = {
-    {"help", "Display information about all supported commands", cmd_help},
-    {"c", "Continue the execution of the program", cmd_c},
-    {"q", "Exit NEMU", cmd_q},
-    {"si", "Step the program", cmd_si},
-    {"info", "Generic command for showing things about the program being debugged.", cmd_info},
-    {"x", "scan the memory", cmd_x},
-    {"p", "Find the value of the expression EXPR",cmd_p},
-    {"w", "Watchpoint", cmd_w},
-    {"d", "Delete the watchpoint", cmd_d},
-    /* TODO: Add more commands */
+} cmd_table [] = {
+  { "help", "Display information about all supported commands", cmd_help },
+  { "c", "Continue the execution of the program", cmd_c },
+  { "si", "Step one instruction exactly", cmd_si },
+  { "info", "Generic command for showing things about the program being debugged", cmd_info },
+  { "x", "Examine memory", cmd_x },
+  { "p", "Print value of expression EXP", cmd_p },
+  { "w", "Set a watchpoint for EXPRESSION", cmd_w },
+  { "d", "Delete all or some breakpoints", cmd_d },
+#ifdef CONFIG_DIFFTEST
+  { "detach", "Disable Difftest", cmd_detach },
+  { "attach", "Enable Difftest", cmd_attach },
+#endif
+  { "save", "Save Status", cmd_save },
+  { "load", "Load Status", cmd_load },
+  { "q", "Exit NEMU", cmd_q },
+
+  /* TODO: Add more commands */
 
 };
 
@@ -111,26 +274,18 @@ static int cmd_help(char *args) {
   return 0;
 }
 
-static int cmd_si(char *args)
-{
-  int n;
-  if (args == NULL)
-  {
-    n = 1;
-  }
-  else
-    sscanf(args, "%d", &n);
-  cpu_exec(n);
-  return 0;
-}
-
-void sdb_set_batch_mode() {
-  is_batch_mode = true;
+void sdb_set_batch_mode(bool val) {
+  is_batch_mode = val;
 }
 
 void sdb_mainloop() {
   if (is_batch_mode) {
     cmd_c(NULL);
+    return;
+  }
+
+  if (is_test_gen_expr_mode) {
+    check_expr();
     return;
   }
 
@@ -168,120 +323,8 @@ void sdb_mainloop() {
 
 void init_sdb() {
   /* Compile the regular expressions. */
-  init_regex();
+  init_expr();
 
   /* Initialize the watchpoint pool. */
   init_wp_pool();
-}
-
-static int cmd_info(char *args)
-{
-  char *arg = strtok(NULL, " ");
-  if(arg == NULL){
-    printf("info r\n");
-    printf("info w\n");
-    return 0;
-  }
-  else if(*arg=='r'){
-    isa_reg_display();
-  }
-  else if (*arg=='w')
-    sdb_watchpoint_display();
-  return 0;
-}
-
-static int cmd_x(char *args){
-  if(args==NULL){
-    printf("No args\n");
-    return 0;
-  }
-  char *n = strtok(args, " ");
-  char *baseaddr = strtok(NULL, " ");
-  int len = 0;
-  paddr_t addr = 0;
-  sscanf(n, "%d", &len);
-  sscanf(baseaddr, "%x", &addr);
-  for (int i = 0; i < len; i++)
-  {
-    printf("%x\n", paddr_read(addr, 4)); 
-    addr = addr + 4;
-  }
-  return 0;
-}
-
-static int cmd_p(char *args){
-  if (args == NULL)
-  {
-    printf("No args\n");
-    return 0;
-  }
-  //  printf("args = %s\n", args);
-  bool flag = false;
-  printf("uint32_t res = %d\n",expr(args, &flag)) ;
-  return 0;
-}
-
-static int cmd_d(char *args)
-{
-  if (args == NULL)
-    printf("No args.\n");
-  else
-  {
-    remove_wp(atoi(args));
-  }
-  return 0;
-}
-
-static int cmd_w(char *args)
-{
-  if(args==NULL)
-  {
-    printf("No args\n");
-    return 0;
-  }
-  else
-  {
-    //assert(0);
-    wp_set(args);
-    return 0;
-  }
-}
-
-void wp_set(char *args)
-{
-  WP *p = new_wp();
-  p->expr = strdup(args);
-  printf("set watchpoint %d : %s\n", p->NO, p->expr);
-}
-
-void remove_wp(int no)
-{
-  if (no < 0 || no > NR_WP - 1)
-  {
-    printf("no such watchpoint\n");
-    assert(0);
-  }
-  else
-  {
-    WP *p = &wp_pool[no];
-    free_wp(p);
-    printf("remove watchpoint %d : %s\n", p->NO, p->expr);
-    free(p->expr);
-    p->expr = NULL;
-  }
-}
-
-void sdb_watchpoint_display()
-{
-  if (head == NULL)
-  {
-    printf("no watchpoint\n");
-    return;
-  }
-  WP *p = head;
-  while (p != NULL)
-  {
-    printf("watchpoint %d : %s \n", p->NO, p->expr);
-    p = p->next;
-  }
 }

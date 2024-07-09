@@ -17,13 +17,49 @@
 #include <memory/paddr.h>
 
 word_t vaddr_ifetch(vaddr_t addr, int len) {
-  return paddr_read(addr, len);
+  switch (isa_mmu_check(addr, len, MEM_TYPE_IFETCH)) {
+    case MMU_DIRECT:
+      return paddr_read(addr, len);
+      break;
+    case MMU_TRANSLATE:
+      paddr_t pg_paddr = isa_mmu_translate(addr, len, MEM_TYPE_IFETCH);
+      paddr_t paddr = pg_paddr | (((VA)addr).bitfield.page_offset);
+      return paddr_read(paddr, len);
+      break;
+    default:
+      panic("unknown result from isa_mmu_check");
+      break;
+  }
 }
 
 word_t vaddr_read(vaddr_t addr, int len) {
-  return paddr_read(addr, len);
+  switch (isa_mmu_check(addr, len, MEM_TYPE_READ)) {
+    case MMU_DIRECT:
+      return paddr_read(addr, len);
+      break;
+    case MMU_TRANSLATE:
+      paddr_t pg_paddr = isa_mmu_translate(addr, len, MEM_TYPE_READ);
+      paddr_t paddr = pg_paddr | (((VA)addr).bitfield.page_offset);
+      return paddr_read(paddr, len);
+      break;
+    default:
+      panic("unknown result from isa_mmu_check");
+      break;
+  }
 }
 
 void vaddr_write(vaddr_t addr, int len, word_t data) {
-  paddr_write(addr, len, data);
+  switch (isa_mmu_check(addr, len, MEM_TYPE_WRITE)) {
+    case MMU_DIRECT:
+      paddr_write(addr, len, data);
+      break;
+    case MMU_TRANSLATE:
+      paddr_t pg_paddr = isa_mmu_translate(addr, len, MEM_TYPE_WRITE);
+      paddr_t paddr = pg_paddr | (((VA)addr).bitfield.page_offset);
+      paddr_write(paddr, len, data);
+      break;
+    default:
+      panic("unknown result from isa_mmu_check");
+      break;
+  }
 }

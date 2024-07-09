@@ -27,12 +27,22 @@ static uint8_t pmem[CONFIG_MSIZE] PG_ALIGN = {};
 uint8_t* guest_to_host(paddr_t paddr) { return pmem + paddr - CONFIG_MBASE; }
 paddr_t host_to_guest(uint8_t *haddr) { return haddr - pmem + CONFIG_MBASE; }
 
+static inline void mtrace(char *type, paddr_t addr, int len, word_t data) {
+#ifdef CONFIG_MTRACE
+  if(addr - CONFIG_MTRACE_START_ADDRESS <= CONFIG_MTRACE_RANGE){
+    Log("[%s] address = "FMT_PADDR", len = %d, data = "FMT_WORD", pc = "FMT_WORD,type, addr, len, data, cpu.pc);
+  }
+#endif
+}
+
 static word_t pmem_read(paddr_t addr, int len) {
   word_t ret = host_read(guest_to_host(addr), len);
+  mtrace("R", addr, len, ret);
   return ret;
 }
 
 static void pmem_write(paddr_t addr, int len, word_t data) {
+  mtrace("W", addr, len, data);
   host_write(guest_to_host(addr), len, data);
 }
 
@@ -46,13 +56,7 @@ void init_mem() {
   pmem = malloc(CONFIG_MSIZE);
   assert(pmem);
 #endif
-#ifdef CONFIG_MEM_RANDOM
-  uint32_t *p = (uint32_t *)pmem;
-  int i;
-  for (i = 0; i < (int) (CONFIG_MSIZE / sizeof(p[0])); i ++) {
-    p[i] = rand();
-  }
-#endif
+  IFDEF(CONFIG_MEM_RANDOM, memset(pmem, rand(), CONFIG_MSIZE));
   Log("physical memory area [" FMT_PADDR ", " FMT_PADDR "]", PMEM_LEFT, PMEM_RIGHT);
 }
 
@@ -67,4 +71,21 @@ void paddr_write(paddr_t addr, int len, word_t data) {
   if (likely(in_pmem(addr))) { pmem_write(addr, len, data); return; }
   IFDEF(CONFIG_DEVICE, mmio_write(addr, len, data); return);
   out_of_bound(addr);
+}
+
+void printf_memory_by_paddr_len(paddr_t addr, int len) {
+  paddr_t columns = 8;
+  paddr_t cur_addr = addr;
+  paddr_t n = len;
+  while ( cur_addr < addr + n ) {
+    paddr_t i = (cur_addr - addr) % columns;
+    if(i == 0){
+        printf(FMT_WORD ": ", cur_addr);
+    }
+    printf( "0x%02x  ", paddr_read(cur_addr, 1));
+    if(i == 7 || (cur_addr == addr + n - 1)){
+        printf("\n");
+    }
+    cur_addr++;
+  }
 }

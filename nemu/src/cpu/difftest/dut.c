@@ -26,7 +26,12 @@ void (*ref_difftest_regcpy)(void *dut, bool direction) = NULL;
 void (*ref_difftest_exec)(uint64_t n) = NULL;
 void (*ref_difftest_raise_intr)(uint64_t NO) = NULL;
 
+void sdb_set_batch_mode(bool val);
+
 #ifdef CONFIG_DIFFTEST
+
+static bool is_difftesting = true;
+static long difftest_img_size = 0;
 
 static bool is_skip_ref = false;
 static int skip_dut_nr_inst = 0;
@@ -34,6 +39,9 @@ static int skip_dut_nr_inst = 0;
 // this is used to let ref skip instructions which
 // can not produce consistent behavior with NEMU
 void difftest_skip_ref() {
+  if(!is_difftesting) {
+    return;
+  }
   is_skip_ref = true;
   // If such an instruction is one of the instruction packing in QEMU
   // (see below), we end the process of catching up with QEMU's pc to
@@ -52,6 +60,9 @@ void difftest_skip_ref() {
 //   Let REF run `nr_ref` instructions first.
 //   We expect that DUT will catch up with REF within `nr_dut` instructions.
 void difftest_skip_dut(int nr_ref, int nr_dut) {
+  if(!is_difftesting) {
+    return;
+  }
   skip_dut_nr_inst += nr_dut;
 
   while (nr_ref -- > 0) {
@@ -86,6 +97,10 @@ void init_difftest(char *ref_so_file, long img_size, int port) {
       "This will help you a lot for debugging, but also significantly reduce the performance. "
       "If it is not necessary, you can turn it off in menuconfig.", ref_so_file);
 
+
+  sdb_set_batch_mode(false);
+  difftest_img_size = img_size;
+
   ref_difftest_init(port);
   ref_difftest_memcpy(RESET_VECTOR, guest_to_host(RESET_VECTOR), img_size, DIFFTEST_TO_REF);
   ref_difftest_regcpy(&cpu, DIFFTEST_TO_REF);
@@ -100,6 +115,10 @@ static void checkregs(CPU_state *ref, vaddr_t pc) {
 }
 
 void difftest_step(vaddr_t pc, vaddr_t npc) {
+  if(!is_difftesting) {
+    return;
+  }
+
   CPU_state ref_r;
 
   if (skip_dut_nr_inst > 0) {
@@ -127,6 +146,23 @@ void difftest_step(vaddr_t pc, vaddr_t npc) {
 
   checkregs(&ref_r, pc);
 }
+
+void difftest_detach(){
+  is_skip_ref = false;
+  skip_dut_nr_inst = 0;
+  
+  is_difftesting = false;
+}
+
+void difftest_attach(){
+  is_difftesting = true;
+
+  isa_difftest_attach();
+
+  ref_difftest_memcpy(RESET_VECTOR, guest_to_host(RESET_VECTOR), CONFIG_MSIZE, DIFFTEST_TO_REF);
+  ref_difftest_regcpy(&cpu, DIFFTEST_TO_REF);
+}
+
 #else
 void init_difftest(char *ref_so_file, long img_size, int port) { }
 #endif

@@ -16,3 +16,12 @@
 NAME = gen-expr
 SRCS = gen-expr.c
 include $(NEMU_HOME)/scripts/build.mk
+
+GENERATOR = build/gen-expr.test
+NEMUFLAGS += -g
+
+$(GENERATOR): $(BINARY)
+	$^ 10000 > $@
+
+test: $(GENERATOR)
+	$(MAKE) -C $(NEMU_HOME) run ARGS="$(NEMUFLAGS)" < $(GENERATOR)
