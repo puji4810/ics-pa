@@ -15,14 +15,14 @@ Itrace itrace[MAX_INS_LEN];
 int itrace_num = 0;
 bool is_full = false;
 
-void trace_inst(vaddr_t pc, int inst){
+extern void trace_inst(vaddr_t pc, int inst){
 	itrace[itrace_num].pc = pc;
 	itrace[itrace_num].inst_val = inst;
 	itrace_num = (itrace_num+1 % MAX_INS_LEN);
 	is_full = is_full || (itrace_num == 0);
 }
 
-void display_inst(){
+extern void display_inst(){
 	int end = itrace_num;
 	int i = is_full ? itrace_num : 0;
 
