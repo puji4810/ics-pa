@@ -21,7 +21,7 @@
 #define R(i) gpr(i)
 #define Mr vaddr_read
 #define Mw vaddr_write
-void trace_inst(vaddr_t pc, int inst);
+void trace_inst(word_t pc, int inst);
 enum
 {
   TYPE_I,

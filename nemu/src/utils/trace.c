@@ -1,43 +1,46 @@
 #include <common.h>
 
-void disassemble(char *str, int size, uint64_t pc, uint8_t *code, int nbyte);
-uint32_t inst_fetch(vaddr_t *pc, int inst);
-#define MAX_INS_LEN 16
+#define MAX_IRINGBUF 16
 
 typedef struct
 {
-	vaddr_t pc;
-	uint32_t inst_val;
-} Itrace;
+	word_t pc;
+	uint32_t inst;
+} ItraceNode;
 
-Itrace itrace[MAX_INS_LEN];
-int itrace_num = 0;
-bool is_full = false;
+ItraceNode iringbuf[MAX_IRINGBUF];
+int p_cur = 0;
+bool full = false;
 
-extern void trace_inst(vaddr_t pc, int inst){
-	itrace[itrace_num].pc = pc;
-	itrace[itrace_num].inst_val = inst;
-	itrace_num = (itrace_num+1 % MAX_INS_LEN);
-	is_full = is_full || (itrace_num == 0);
+void trace_inst(word_t pc, uint32_t inst)
+{
+	iringbuf[p_cur].pc = pc;
+	iringbuf[p_cur].inst = inst;
+	p_cur = (p_cur + 1) % MAX_IRINGBUF;
+	full = full || p_cur == 0;
 }
 
-extern void display_inst(){
-	if (!is_full && !itrace_num) return;
-	int end = itrace_num;
-	int i = is_full ? itrace_num : 0;
+void display_inst()
+{
+	if (!full && !p_cur)
+		return;
 
-	char buf[128];
+	int end = p_cur;
+	int i = full ? p_cur : 0;
+
+	void disassemble(char *str, int size, uint64_t pc, uint8_t *code, int nbyte);
+	char buf[128]; // 128 should be enough!
 	char *p;
 	//Statement("Most recently executed instructions");
 	do
 	{
 		p = buf;
-		p += sprintf(buf, "%s" FMT_WORD ": %08x ", (i + 1) % MAX_INS_LEN == end ? " --> " : "     ", itrace[i].pc, itrace[i].inst_val);
-		disassemble(p, buf + sizeof(buf) - p, itrace[i].pc, (uint8_t *)&itrace[i].inst_val, 4);
+		p += sprintf(buf, "%s" FMT_WORD ": %08x ", (i + 1) % MAX_IRINGBUF == end ? " --> " : "     ", iringbuf[i].pc, iringbuf[i].inst);
+		disassemble(p, buf + sizeof(buf) - p, iringbuf[i].pc, (uint8_t *)&iringbuf[i].inst, 4);
 
-		if ((i + 1) % MAX_INS_LEN == end)
+		if ((i + 1) % MAX_IRINGBUF == end)
 			printf(ANSI_FG_RED);
 		puts(buf);
-	} while ((i = (i + 1) % MAX_INS_LEN) != end);
+	} while ((i = (i + 1) % MAX_IRINGBUF) != end);
 	puts(ANSI_NONE);
 }
