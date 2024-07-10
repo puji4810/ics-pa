@@ -23,11 +23,13 @@ extern void trace_inst(vaddr_t pc, int inst){
 }
 
 extern void display_inst(){
+	if (!is_full && !itrace_num) return;
 	int end = itrace_num;
 	int i = is_full ? itrace_num : 0;
 
 	char buf[128];
 	char *p;
+	//Statement("Most recently executed instructions");
 	do
 	{
 		p = buf;
