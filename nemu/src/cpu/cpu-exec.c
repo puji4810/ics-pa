@@ -30,6 +30,7 @@ uint64_t g_nr_guest_inst = 0;
 static uint64_t g_timer = 0; // unit: us
 static bool g_print_step = false;
 
+void display_inst();
 void device_update();
 void wp_check(){
   WP* p=head;
@@ -109,6 +110,7 @@ static void statistic() {
 
 void assert_fail_msg() {
   isa_reg_display();
+  display_inst();
   statistic();
 }
 
