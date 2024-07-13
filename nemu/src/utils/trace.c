@@ -45,12 +45,12 @@ void display_inst()
 	puts(ANSI_NONE);
 }
 
-void display_pread(paddr_t addr, int len)
+void mtrace_pread(paddr_t addr, int len)
 {
 	printf("pread at " FMT_PADDR " len=%d\n", addr, len);
 }
 
-void display_pwrite(paddr_t addr, int len, word_t data)
+void mtrace_pwrite(paddr_t addr, int len, word_t data)
 {
 	printf("pwrite at " FMT_PADDR " len=%d, data=" FMT_WORD "\n", addr, len, data);
 }
