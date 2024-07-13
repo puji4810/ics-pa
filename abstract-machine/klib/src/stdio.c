@@ -97,8 +97,9 @@ int vsprintf(char *out, const char *fmt, va_list ap)
 int sprintf(char *out, const char *fmt, ...) {
   va_list ap;
   va_start(ap, fmt);
-  int ret = vsprintf(out, fmt, ap);
-  //va_end(ap);
+  //int ret = vsprintf(out, fmt, ap);
+  int ret = 0;
+  va_end(ap);
   return ret;
 }
 
