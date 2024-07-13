@@ -48,6 +48,7 @@ void display_inst()
 void mtrace_pread(paddr_t addr, int len)
 {
 	printf("pread at " FMT_PADDR " len=%d\n", addr, len);
+	printf("1111111111111111111111111");
 }
 
 void mtrace_pwrite(paddr_t addr, int len, word_t data)
