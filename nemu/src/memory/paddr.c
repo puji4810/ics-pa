@@ -61,6 +61,7 @@ word_t paddr_read(paddr_t addr, int len) {
   IFDEF(CONFIG_MTRACE, mtrace_pread(addr, len));
   IFDEF(CONFIG_DEVICE, return mmio_read(addr, len));
   out_of_bound(addr);
+  printf("1111111111111111111111111");
   return 0;
 }
 
