@@ -187,20 +187,7 @@ void ftrace_call(word_t pc, paddr_t func_addr)
 }
 
 void ftrace_ret(word_t pc){
-	int i = 0;
-	for (; i < func_num; i++)
-	{
-		if (pc >= symbol[i].addr && pc < (symbol[i].addr + symbol[i].size))
-		{
-			break;
-		}
-	}
-	printf("0x%08x:", pc);
-
-	rec_depth--;
-
-	for (int k = 0; k < rec_depth; k++)
-		printf("  ");
+	int i = 1;
 
 	printf("ret  [%s]\n", symbol[i].name);
 
