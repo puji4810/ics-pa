@@ -86,15 +86,22 @@ static int decode_exec(Decode *s) {
   INSTPAT("000000? ????? ????? 001 ????? 00100 11", slli, I, R(rd) = (src1 << BITS(imm, 5, 0)));
   INSTPAT("010000? ????? ????? 101 ????? 00100 11", srai, I, R(rd) = (int32_t)src1 >> BITS(imm, 5, 0));
   INSTPAT("000000? ????? ????? 101 ????? 00100 11", srli, I, R(rd) = src1 >> BITS(imm, 5, 0));
-  INSTPAT("??????? ????? ????? 000 ????? 11001 11", jalr   , I, s->dnpc = (src1 + imm) & ~(word_t)1; IFDEF(CONFIG_ITRACE, {
-    if (s->isa.inst.val == 0x00008067) {
-      ftrace_ret(s->pc); // ret -> jalr x0, 0(x1)
-    } else if (rd == 1) {
-      ftrace_call(s->pc, s->dnpc);
-    } else if (rd == 0 && imm == 0) {
-      ftrace_call(s->pc, s->dnpc); // jr rs1 -> jalr x0, 0(rs1), which may be other control flow e.g. 'goto','for'
-    }
-  }); R(rd) = s->pc + 4);
+  INSTPAT("??????? ????? ????? 000 ????? 11001 11", jalr, I, s->dnpc = (src1 + imm) & ~(word_t)1; IFDEF(CONFIG_ITRACE, {
+            printf("1111111111111");
+            if (s->isa.inst.val == 0x00008067)
+            {
+              ftrace_ret(s->pc); // ret -> jalr x0, 0(x1)
+            }
+            else if (rd == 1)
+            {
+              ftrace_call(s->pc, s->dnpc);
+            }
+            else if (rd == 0 && imm == 0)
+            {
+              ftrace_call(s->pc, s->dnpc); // jr rs1 -> jalr x0, 0(rs1), which may be other control flow e.g. 'goto','for'
+            }
+          });
+          R(rd) = s->pc + 4);
   INSTPAT("??????? ????? ????? 100 ????? 00100 11", xori, I, R(rd) = src1 ^ imm);
   INSTPAT("??????? ????? ????? 110 ????? 00100 11", ori, I, R(rd) = src1 | imm);
 
