@@ -165,8 +165,8 @@ void parse_elf(char *elf_file)
 	free(string_table);
 }
 
-int call_depth = 0;
-int rec_depth = 0;
+int call_depth = 1;
+int rec_depth = 1;
 void ftrace_call(word_t pc, paddr_t func_addr)
 {
 	int i = 0;
@@ -185,7 +185,7 @@ void ftrace_call(word_t pc, paddr_t func_addr)
 	rec_depth++;
 
 	printf("call  [%s@0x%08x]\n", symbol[i].name, func_addr);
-	printf("0x%08x:", symbol[i].addr);
+
 
 }
 
