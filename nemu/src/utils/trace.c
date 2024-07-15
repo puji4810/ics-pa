@@ -152,7 +152,7 @@ void parse_elf(char *elf_file)
 				{
 					const char *name = string_table + sym.st_name;
 					//strncpy(symbol[func_num].name, name, sizeof(symbol[func_num].name) - 1);
-					snprintf(symbol[func_num].name, sizeof(symbol[func_num].name), "%s", name);
+					memcpy(symbol[func_num].name, name, strlen(name));
 					symbol[func_num].addr = sym.st_value;
 					symbol[func_num].size = sym.st_size;
 					func_num++;
