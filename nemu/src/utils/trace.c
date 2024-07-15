@@ -151,8 +151,8 @@ void parse_elf(char *elf_file)
 				if (ELF32_ST_TYPE(sym.st_info) == STT_FUNC)
 				{
 					const char *name = string_table + sym.st_name;
-					strncpy(symbol[func_num].name, name, sizeof(symbol[func_num].name) - 1);
-					printf("name: %s\n", symbol[func_num].name);
+					//strncpy(symbol[func_num].name, name, sizeof(symbol[func_num].name) - 1);
+					snprintf(symbol[func_num].name, sizeof(symbol[func_num].name), "%s", name);
 					symbol[func_num].addr = sym.st_value;
 					symbol[func_num].size = sym.st_size;
 					func_num++;
