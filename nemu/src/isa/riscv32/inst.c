@@ -91,12 +91,7 @@ static int decode_exec(Decode *s) {
     {
       ftrace_ret(s->pc);
     }
-    else if(rd == 1){//R(1) is ra ,which means jump to funcxxxx,mabybe
-      ftrace_call(s->pc, s->dnpc);
-    }
-    else if(rd==0 && imm == 0){
-      ftrace_call(s->pc,s->dnpc);
-    }
+
     
   }); R(rd) = s->pc + 4);
   INSTPAT("??????? ????? ????? 100 ????? 00100 11", xori, I, R(rd) = src1 ^ imm);
