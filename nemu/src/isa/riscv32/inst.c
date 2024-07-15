@@ -101,7 +101,7 @@ static int decode_exec(Decode *s) {
               ftrace_call(s->pc, s->dnpc); // jr rs1 -> jalr x0, 0(rs1), which may be other control flow e.g. 'goto','for'
             }
           });
-          R(rd) = s->pc + 4);
+          R(rd) = s->pc + 4; printf("1111111111111"););
   INSTPAT("??????? ????? ????? 100 ????? 00100 11", xori, I, R(rd) = src1 ^ imm);
   INSTPAT("??????? ????? ????? 110 ????? 00100 11", ori, I, R(rd) = src1 | imm);
 
