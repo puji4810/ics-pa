@@ -90,7 +90,11 @@ static int decode_exec(Decode *s) {
     if(rd == 1){//R(1) is ra ,which means jump to funcxxxx,mabybe
       ftrace_call(s->pc, s->dnpc);
     }
-    else if(rd==0 && src1 == R(1)){
+    else if(rd==0 && imm == 0){
+      ftrace_call(s->pc,s->dnpc);
+    }
+    else if (s->isa.inst.val == 0x00008067)
+    {
       ftrace_ret(s->pc);
     }
   }));
