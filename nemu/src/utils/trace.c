@@ -183,7 +183,7 @@ void ftrace_call(word_t pc, paddr_t func_addr)
 	rec_depth++;
 
 	printf("call  [%s@0x%08x]\n", symbol[i].name, func_addr);
-
+	printf("111111111111111");
 }
 
 void ftrace_ret(word_t pc){
