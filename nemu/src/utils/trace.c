@@ -203,10 +203,8 @@ void ftrace_ret(word_t pc){
 	for (int k = 0; k < rec_depth; k++)
 		printf("  ");
 
-	if(symbol[i].name[0] == '\0')
-		printf("shit!!!!!!!!!!!!!!!");
-	else
-		printf("ret  [%s]\n", symbol[i].name);
+
+	printf("ret  [%c]\n", symbol[i].name[0]);
 
 }
 
