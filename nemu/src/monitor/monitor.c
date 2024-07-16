@@ -182,76 +182,95 @@ void parse_elf(char *elf_file)
 {
   if (elf_file == NULL)
   {
-    printf("The ELF file is not exist\n");
+    printf("The ELF file does not exist\n");
     return;
   }
+
   FILE *fp = fopen(elf_file, "rb");
   if (fp == NULL)
   {
-    printf("error: failed to open the elf file\n");
-    exit(0);
+    printf("Error: Failed to open the ELF file\n");
+    exit(1);
   }
 
-  Elf32_Ehdr *ehdr = (Elf32_Ehdr *)malloc(sizeof(Elf32_Ehdr));
-  if (fread(ehdr, sizeof(Elf32_Ehdr), 1, fp) < 1)
+  Elf32_Ehdr ehdr;
+  if (fread(&ehdr, sizeof(Elf32_Ehdr), 1, fp) < 1)
   {
-    printf("error: failed to read the elf header\n");
-    exit(0);
+    printf("Error: Failed to read the ELF header\n");
+    exit(1);
   }
-  fseek(fp, ehdr->e_shoff, SEEK_SET);
 
-  Elf32_Shdr *shdr = NULL;
+  fseek(fp, ehdr.e_shoff, SEEK_SET);
+
+  Elf32_Shdr *shdrs = malloc(ehdr.e_shnum * sizeof(Elf32_Shdr));
+  if (fread(shdrs, sizeof(Elf32_Shdr), ehdr.e_shnum, fp) < ehdr.e_shnum)
+  {
+    printf("Error: Failed to read section headers\n");
+    exit(1);
+  }
+
   char *shstrtab = NULL;
-  for (int i = 0; i < ehdr->e_shnum; i++)
+  for (int i = 0; i < ehdr.e_shnum; i++)
   {
-    if (fread(shdr, sizeof(Elf32_Shdr), 1, fp) < 1)
+    if (shdrs[i].sh_type == SHT_STRTAB && i == ehdr.e_shstrndx)
     {
-      printf("error: failed to read the section header\n");
-      exit(0);
-    }
-    if (shdr->sh_type == SHT_STRTAB)
-    {
-      shstrtab = (char *)malloc(shdr->sh_size);
-      fseek(fp, shdr->sh_offset, SEEK_SET);
-      if (fread(shstrtab, shdr->sh_size, 1, fp) < 1)
+      shstrtab = malloc(shdrs[i].sh_size);
+      fseek(fp, shdrs[i].sh_offset, SEEK_SET);
+      if (fread(shstrtab, shdrs[i].sh_size, 1, fp) < 1)
       {
-        printf("error: failed to read the section header\n");
-        exit(0);
+        printf("Error: Failed to read section string table\n");
+        exit(1);
       }
     }
   }
 
-  fseek(fp, ehdr->e_shoff, SEEK_SET);
-  for (int i = 0; i < ehdr->e_shnum; i++)
+  for (int i = 0; i < ehdr.e_shnum; i++)
   {
-    if (fread(shdr, sizeof(Elf32_Shdr), 1, fp) < 1)
+    if (shdrs[i].sh_type == SHT_SYMTAB)
     {
-      printf("error: failed to read the section header\n");
-      exit(0);
-    }
-    if (shdr->sh_type == SHT_SYMTAB)
-    {
-      int symnum = shdr->sh_size / shdr->sh_entsize;
-      symbol = (Symbol *)malloc(symnum * sizeof(Symbol));
-      Elf32_Sym *symtab;
-      fseek(fp, shdr->sh_offset, SEEK_SET);
+      int symnum = shdrs[i].sh_size / shdrs[i].sh_entsize;
+      Elf32_Sym *symtab = malloc(shdrs[i].sh_size);
+      fseek(fp, shdrs[i].sh_offset, SEEK_SET);
+      if (fread(symtab, shdrs[i].sh_size, 1, fp) < 1)
+      {
+        printf("Error: Failed to read the symbol table\n");
+        exit(1);
+      }
+
+      char *strtab = NULL;
+      for (int j = 0; j < ehdr.e_shnum; j++)
+      {
+        if (shdrs[j].sh_type == SHT_STRTAB && strcmp(&shstrtab[shdrs[j].sh_name], ".strtab") == 0)
+        {
+          strtab = malloc(shdrs[j].sh_size);
+          fseek(fp, shdrs[j].sh_offset, SEEK_SET);
+          if (fread(strtab, shdrs[j].sh_size, 1, fp) < 1)
+          {
+            printf("Error: Failed to read the string table\n");
+            exit(1);
+          }
+        }
+      }
+
+      symbol = malloc(symnum * sizeof(Symbol));
+      func_num = 0;
       for (int j = 0; j < symnum; j++)
       {
-        symtab = (Elf32_Sym *)malloc(sizeof(Elf32_Sym));
-        if (fread(symtab, sizeof(Elf32_Sym), 1, fp) < 1)
+        if (ELF32_ST_TYPE(symtab[j].st_info) == STT_FUNC)
         {
-          printf("error: failed to read the symbol table\n");
-          exit(0);
-        }
-        if (ELF32_ST_TYPE(symtab->st_info) == STT_FUNC)
-        {
-          // strcpy(symbol[func_num].name, shstrtab + symtab->st_name);
-          sprintf(symbol[func_num].name, "%s", shstrtab + symtab->st_name);
-          symbol[func_num].addr = symtab->st_value;
-          symbol[func_num].size = symtab->st_size;
+          sprintf(symbol[func_num].name, "%s", &strtab[symtab[j].st_name]);
+          symbol[func_num].addr = symtab[j].st_value;
+          symbol[func_num].size = symtab[j].st_size;
           func_num++;
         }
       }
+
+      free(symtab);
+      free(strtab);
     }
   }
+
+  free(shstrtab);
+  free(shdrs);
+  fclose(fp);
 }
