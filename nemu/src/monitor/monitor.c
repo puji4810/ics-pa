@@ -108,12 +108,12 @@ static int parse_args(int argc, char *argv[]) {
 void init_monitor(int argc, char *argv[]) {
   /* Perform some global initialization. */
 
-  /* Parse ELF file. */
-  parse_elf(elf_file);
-
   /* Parse arguments. */
   parse_args(argc, argv);
 
+  /* Parse ELF file. */
+  parse_elf(elf_file);
+  
   /* Set random seed. */
   init_rand();
 
@@ -183,7 +183,7 @@ void parse_elf(char *elf_file)
   if (elf_file == NULL)
   {
     printf("The ELF file does not exist\n");
-    //return;
+    return;
   }
 
   FILE *fp = fopen(elf_file, "rb");
