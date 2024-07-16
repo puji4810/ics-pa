@@ -183,7 +183,7 @@ void parse_elf(char *elf_file)
   if (elf_file == NULL)
   {
     printf("The ELF file does not exist\n");
-    return;
+    //return;
   }
 
   FILE *fp = fopen(elf_file, "rb");
@@ -251,7 +251,7 @@ void parse_elf(char *elf_file)
           }
         }
       }
-      printf("%s\n", &strtab[symtab[1].st_name]);
+
       symbol = malloc(symnum * sizeof(Symbol));
       func_num = 0;
       for (int j = 0; j < symnum; j++)
