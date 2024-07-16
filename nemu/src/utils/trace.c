@@ -58,7 +58,7 @@ void mtrace_pwrite(paddr_t addr, int len, word_t data)
 
 typedef struct
 {
-	char name[64];
+	char* name;
 	paddr_t addr; // the function head address
 	Elf32_Xword size;
 } Symbol;
@@ -204,7 +204,7 @@ void ftrace_ret(word_t pc){
 		printf("  ");
 
 
-	printf("ret  [%c]\n", symbol[i].name[0]);
+	printf("ret  [%s]\n", symbol[i].name);
 
 }
 
