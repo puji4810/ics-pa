@@ -89,12 +89,8 @@ static int parse_args(int argc, char *argv[]) {
       case 'p': sscanf(optarg, "%d", &difftest_port); break;
       case 'l': log_file = optarg; break;
       case 'd': diff_so_file = optarg; break;
-      case 'e': printf("\n%s\n",optarg);elf_file = optarg;
-        printf("\n%s\n", elf_file);
-        break;
-      case 1: img_file = optarg;
-        printf("\n%s\n", log_file);
-        return 0;
+      case 'e': elf_file = optarg; break;
+      case 1: img_file = optarg; return 0;
       default:
         printf("Usage: %s [OPTION...] IMAGE [args]\n\n", argv[0]);
         printf("\t-b,--batch              run with batch mode\n");
@@ -111,7 +107,7 @@ static int parse_args(int argc, char *argv[]) {
 
 void init_monitor(int argc, char *argv[]) {
   /* Perform some global initialization. */
-  printf("111111111111%s %s\n", elf_file,log_file);
+
   /* Parse ELF file. */
   parse_elf(elf_file);
 
