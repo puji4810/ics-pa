@@ -251,7 +251,7 @@ void parse_elf(char *elf_file)
           }
         }
       }
-
+      printf("%s\n", &strtab[symtab[1].st_name]);
       symbol = malloc(symnum * sizeof(Symbol));
       func_num = 0;
       for (int j = 0; j < symnum; j++)
