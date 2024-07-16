@@ -145,6 +145,7 @@ void parse_elf(char *elf_file)
 			{
 				if (ELF32_ST_TYPE(symtab[j].st_info) == STT_FUNC)
 				{
+					printf("11111");
 					sprintf(symbol[func_num].name, "%s", &strtab[symtab[j].st_name]);
 					symbol[func_num].addr = symtab[j].st_value;
 					symbol[func_num].size = symtab[j].st_size;
