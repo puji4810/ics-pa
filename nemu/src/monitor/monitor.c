@@ -109,7 +109,7 @@ static int parse_args(int argc, char *argv[]) {
 
 void init_monitor(int argc, char *argv[]) {
   /* Perform some global initialization. */
-  printf("111111111111%s\n", elf_file);
+  printf("111111111111%s %s\n", elf_file,log_file);
   /* Parse ELF file. */
   parse_elf(elf_file);
 
