@@ -67,7 +67,7 @@ Symbol *symbol = NULL; // dynamic allocate memory  or direct allocate memory (Sy
 int func_num = 0;
 void parse_elf(char *elf_file)
 {
-	printf("11111");
+	printf("parse_elf %s\n", elf_file);
 	if (elf_file == NULL)
 	{
 		printf("The ELF file does not exist\n");
