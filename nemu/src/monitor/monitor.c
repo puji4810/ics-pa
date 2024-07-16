@@ -113,7 +113,7 @@ void init_monitor(int argc, char *argv[]) {
 
   /* Parse ELF file. */
   parse_elf(elf_file);
-  
+
   /* Set random seed. */
   init_rand();
 
@@ -258,7 +258,6 @@ void parse_elf(char *elf_file)
       {
         if (ELF32_ST_TYPE(symtab[j].st_info) == STT_FUNC)
         {
-          printf("11111");
           printf("%s\n", &strtab[symtab[j].st_name]);
           sprintf(symbol[func_num].name, "%s", &strtab[symtab[j].st_name]);
           symbol[func_num].addr = symtab[j].st_value;
