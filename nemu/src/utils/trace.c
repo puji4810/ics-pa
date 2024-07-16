@@ -111,18 +111,19 @@ void parse_elf(char *elf_file)
 		}
 		if(shdr->sh_type == SHT_SYMTAB){
 			int symnum = shdr->sh_size / shdr->sh_entsize;
-			Elf32_Sym *symtab = (Elf32_Sym *)malloc(shdr->sh_size);
+			symbol = (Symbol *)malloc(symnum * sizeof(Symbol));
+			Elf32_Sym *symtab ;
 			fseek(fp, shdr->sh_offset, SEEK_SET);
-			if(fread(symtab, shdr->sh_size, 1, fp) < 1){
-				printf("error: failed to read the symbol table\n");
-				exit(0);
-			}
-			symbol = (Symbol *)realloc(symbol, (symnum + 1) * sizeof(Symbol));
-			for (int j = 0; j < symnum; j++){
-				if(ELF32_ST_TYPE(symtab[j].st_info) == STT_FUNC){
-					strcpy(symbol[func_num].name, shstrtab + symtab[j].st_name);
-					symbol[func_num].addr = symtab[j].st_value;
-					symbol[func_num].size = symtab[j].st_size;
+			for (int j = 0;j<symnum;j++){
+				symtab = (Elf32_Sym *)malloc(sizeof(Elf32_Sym));
+				if(fread(symtab, sizeof(Elf32_Sym), 1, fp) < 1){
+					printf("error: failed to read the symbol table\n");
+					exit(0);
+				}
+				if(ELF32_ST_TYPE(symtab->st_info) == STT_FUNC){
+					strcpy(symbol[func_num].name, shstrtab + symtab->st_name);
+					symbol[func_num].addr = symtab->st_value;
+					symbol[func_num].size = symtab->st_size;
 					func_num++;
 				}
 			}
