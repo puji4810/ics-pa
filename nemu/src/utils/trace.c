@@ -62,7 +62,7 @@ typedef struct
 	paddr_t addr; // the function head address
 	Elf32_Xword size;
 } Symbol;
-
+extern char* elf_file;
 Symbol *symbol = NULL; // dynamic allocate memory  or direct allocate memory (Symbol symbol[NUM])
 int func_num = 0;
 void parse_elf(char *elf_file)
