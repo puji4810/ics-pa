@@ -121,7 +121,8 @@ void parse_elf(char *elf_file)
 					exit(0);
 				}
 				if(ELF32_ST_TYPE(symtab->st_info) == STT_FUNC){
-					strcpy(symbol[func_num].name, shstrtab + symtab->st_name);
+					//strcpy(symbol[func_num].name, shstrtab + symtab->st_name);
+					sprintf(symbol[func_num].name, "%s", shstrtab + symtab->st_name);
 					symbol[func_num].addr = symtab->st_value;
 					symbol[func_num].size = symtab->st_size;
 					func_num++;
