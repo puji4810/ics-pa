@@ -101,7 +101,7 @@ int vsprintf(char *out, const char *fmt, va_list ap)
       }
       break;
     }
-    default:
+    //default:
       //panic("Not implemented");
     }
     f++;
