@@ -24,16 +24,18 @@ char *strcpy(char *dst, const char *src) {
 }
 
 char *strncpy(char *dst, const char *src, size_t n) {
-  if(src == NULL) return NULL;
+  if (src == NULL)
+    return NULL;
   else {
-    char *ret = dst;
     while(*src != '\0') 
     {
-      if(n-- == 0) break;
-      *dst++ = *src++;
+      if(n-- == 0 ) break;
+      *dst = *src;
+      dst++;
+      src++;
     }
     *dst = '\0';
-    return ret;
+    return dst;
   }
 }
 

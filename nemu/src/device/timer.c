@@ -46,3 +46,11 @@ void init_timer() {
 #endif
   IFNDEF(CONFIG_TARGET_AM, add_alarm_handle(timer_intr));
 }
+
+void __am_timer_uptime(AM_TIMER_UPTIME_T *uptime)
+{
+  uint32_t hi = inl(MMIO_BASE + 0x4c);
+  uint32_t lo = inl(MMIO_BASE + 0x48);
+  uint64_t time = ((uint64_t)hi << 32) | lo;
+  uptime->us = time - boot_time;
+}

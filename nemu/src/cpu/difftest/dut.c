@@ -130,3 +130,23 @@ void difftest_step(vaddr_t pc, vaddr_t npc) {
 #else
 void init_difftest(char *ref_so_file, long img_size, int port) { }
 #endif
+
+bool isa_difftest_checkregs(CPU_state *ref_r, vaddr_t pc)
+{
+  bool sign = true;
+  int i = 0;
+  for (; i < 32; i++)
+  {
+    if (cpu.gpr[i] != ref_r->gpr[i])
+    {
+      sign = false;
+      break;
+    }
+  }
+  if (sign && cpu.pc == ref_r->pc)
+  {
+    return true;
+  }
+  pc = ref_r->pc;
+  return false;
+}
