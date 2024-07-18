@@ -21,6 +21,7 @@ void trace_inst(word_t pc, uint32_t inst)
 	full = full || p_cur == 0;
 }
 
+#ifdef CONFIG_IRINGBUF
 void display_inst()
 {
 	if (!full && !p_cur)
@@ -45,6 +46,7 @@ void display_inst()
 	} while ((i = (i + 1) % MAX_IRINGBUF) != end);
 	puts(ANSI_NONE);
 }
+#endif
 
 void mtrace_pread(paddr_t addr, int len)
 {
