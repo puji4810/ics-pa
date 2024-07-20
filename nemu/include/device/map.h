@@ -53,13 +53,5 @@ void add_mmio_map(const char *name, paddr_t addr,
 word_t map_read(paddr_t addr, int len, IOMap *map);
 void map_write(paddr_t addr, int len, word_t data, IOMap *map);
 
-void dtrace_dread(paddr_t addr, IOMap *map)
-{
-  printf("dtrace: read at " FMT_PADDR " from %s\n", addr, map->name);
-}
 
-void dtrace_dwrite(paddr_t addr, IOMap *map)
-{
-  printf("dtrace: write at " FMT_PADDR " to %s\n", addr, map->name);
-}
 #endif

@@ -51,8 +51,16 @@ void init_map() {
   assert(io_space);
   p_space = io_space;
 }
-void dtrace_read(paddr_t addr, IOMap *map);
-void dtrace_write(paddr_t addr, IOMap *map);
+
+void dtrace_read(paddr_t addr, IOMap *map)
+{
+  printf("dtrace: read at " FMT_PADDR " from %s\n", addr, map->name);
+}
+
+void dtrace_write(paddr_t addr, IOMap *map)
+{
+  printf("dtrace: write at " FMT_PADDR " to %s\n", addr, map->name);
+}
 
 word_t map_read(paddr_t addr, int len, IOMap *map)
 {
